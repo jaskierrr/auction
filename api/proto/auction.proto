@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package auction;
+
+option go_package = "./internal/interfaces/grpc;grpc";
+
+import "google/protobuf/timestamp.proto";
+
+// --- User Service ---
+service UserService {
+  rpc CreateUser (CreateUserRequest) returns (UserResponse);
+  rpc GetUser (GetUserRequest) returns (UserResponse);
+  rpc DepositBalance (DepositBalanceRequest) returns (BalanceResponse);
+}
+
+// --- Auction Service ---
+service AuctionService {
+  rpc CreateLot (CreateLotRequest) returns (LotResponse);
+  rpc GetLot (GetLotRequest) returns (LotResponse);
+  rpc PlaceBid (PlaceBidRequest) returns (BidResponse);
+  rpc CloseAuction (CloseAuctionRequest) returns (AuctionResponse);
+}
+
+
+// User
+message User {
+  int64 id = 1;
+  string name = 2;
+  double balance = 3;
+}
+
+message CreateUserRequest {
+  string name = 1;
+}
+
+message GetUserRequest {
+  int64 user_id = 1;
+}
+
+message UserResponse {
+  User user = 1;
+}
+
+message DepositBalanceRequest {
+  int64 user_id = 1;
+  double amount = 2;
+}
+
+message BalanceResponse {
+  double new_balance = 1;
+}
+
+// Lot
+message Lot {
+  int64 id = 1;
+  string title = 2;
+  string description = 3;
+  double starting_bid = 4;
+  int64 seller_id = 5;
+  string status = 6; // "Active" or "Closed"
+}
+
+message CreateLotRequest {
+  string title = 1;
+  string description = 2;
+  double starting_bid = 3;
+  int64 seller_id = 4;
+}
+
+message GetLotRequest {
+  int64 lot_id = 1;
+}
+
+message LotResponse {
+  Lot lot = 1;
+}
+
+// Bid
+message Bid {
+  int64 id = 1;
+  int64 auction_id = 2;
+  int64 bidder_id = 3;
+  double amount = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message PlaceBidRequest {
+  int64 auction_id = 1;
+  int64 bidder_id = 2;
+  double amount = 3;
+}
+
+message BidResponse {
+  Bid bid = 1;
+}
+
+// Auction
+message Auction {
+  int64 id = 1;
+  int64 lot_id = 2;
+  string status = 3; // "Active" or "Ended"
+  int64 winner_id = 4;
+}
+
+message CloseAuctionRequest {
+  int64 auction_id = 1;
+}
+
+message AuctionResponse {
+  Auction auction = 1;
+}
