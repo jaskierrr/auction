@@ -1,0 +1,65 @@
+services:
+  postgres:
+    container_name: auction_postgres
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "db_prod"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - ./data/postgers-data:/var/lib/postgresql/pgdata
+    ports:
+      - "5433:5433"
+    restart: always
+
+  pgadmin:
+    container_name: auction_pgadmin
+    image: dpage/pgadmin4:8.12
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    restart: always
+
+  auction-api:
+    container_name: auction_app
+    image: auction
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 15
+        window: 20s
+
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    # depends_on:
+    #   postgers:
+    #     condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+
+  migrate:
+    container_name: auction_migrater
+    image: migrate/migrate
+    depends_on:
+      - postgres
+    volumes:
+      - .\migrations:/database
+    command: [ "-path", "/database", "-database", "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable", "up" ]
+
+volumes:
+  postgers-data:
+  pgadmin-data:

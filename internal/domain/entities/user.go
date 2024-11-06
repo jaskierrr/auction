@@ -1,7 +1,7 @@
 package entities
 
 type User struct {
-	ID      int64
+	Id      int64
 	Name    string
 	Balance float64
 }

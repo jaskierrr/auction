@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package auction;
 
-option go_package = "./internal/interfaces/grpc;grpc";
+option go_package = "./pkg/grpc;grpc";
 
 import "google/protobuf/timestamp.proto";
 
