@@ -3,11 +3,13 @@ package bootstrapper
 import (
 	"context"
 	"log"
-	"main/internal/app"
+	"log/slog"
+	app "main/internal/app/usercases"
 	"main/internal/config"
-	"main/internal/domain/services/repositories"
+	"main/internal/domain/services"
 	"main/internal/infrastructure/database"
-	dbRepo "main/internal/infrastructure/database/repositories"
+	repo "main/internal/infrastructure/database/repositories"
+	"main/pkg/logger"
 	"net"
 
 	"google.golang.org/grpc"
@@ -15,6 +17,21 @@ import (
 
 type bootstrapper struct {
 	config *config.Config
+	logger *slog.Logger
+	db     database.DB
+
+	user struct {
+		repo repo.UserRepo
+		service service.UserService
+		usecase app.UserUsecase
+	}
+
+
+	auction struct {
+		repo repo.AuctionRepo
+		service service.AuctionService
+		usecase app.AuctionUsecase
+	}
 }
 
 type Bootstrapper interface {
@@ -25,6 +42,7 @@ type Bootstrapper interface {
 func New() Bootstrapper {
 	return &bootstrapper{
 		config: config.NewConfig(),
+		logger: logger.NewLogger(),
 	}
 }
 
@@ -46,16 +64,19 @@ func (b *bootstrapper) registerAPIServer(cfg config.Config) error {
 
 	s := grpc.NewServer()
 
-	db := database.NewDB().NewConn(context.Background(), cfg)
+	b.db = database.NewDB().NewConn(context.Background(), cfg)
 
-	userRepo := dbRepo.NewUserRepo(db)
+	b.user.repo = repo.NewUserRepo(b.db, b.logger)
+	b.user.service = service.NewUserService(b.user.repo)
+	b.user.usecase = app.NewUserUsecase(b.user.service, b.logger)
 
-	userService := repositories.NewUserService(userRepo)
+	b.auction.repo = repo.NewAuctionRepo(b.db, b.logger)
+	b.auction.service = service.NewAuctionService(b.auction.repo)
+	b.auction.usecase = app.NewAuctionUsecase(b.auction.service, b.logger)
 
-	service := app.NewUserService(userService)
 
-	app.RegisterGRPC(s, service)
-	// grpc.RegisterGRPC(s)
+
+	app.RegisterGRPC(s, b.user.usecase, b.auction.usecase)
 	log.Printf("server listening at %v", lis.Addr())
 
 	err = s.Serve(lis)
