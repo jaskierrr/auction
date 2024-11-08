@@ -68,7 +68,6 @@ func (repo *auctionRepo) CloseAuction(ctx context.Context, in *pb.CloseAuctionRe
 		bid.Amount, _ = strconv.ParseFloat(amountStr, 64)
 		auction.Bids = append(auction.Bids, bid)
 	}
-
 	bidsRow.Close()
 
 	var winnerBid entities.Bid
@@ -79,6 +78,18 @@ func (repo *auctionRepo) CloseAuction(ctx context.Context, in *pb.CloseAuctionRe
 			winnerBid = v
 			winnerIndx = i
 		}
+
+		argsForTrans := pgx.NamedArgs{
+			"auction_id": in.AuctionId,
+			"bidder_id": v.BidderId,
+			"amount": v.Amount,
+		}
+		_, err = tx.Exec(ctx, writeTransactionEndedAuctionQuery, argsForTrans)
+		if err != nil {
+			err = errors.Join(err, errors.New("cant write transaction"))
+			return entities.Auction{}, err
+		}
+		repo.logger.Info("Trans write!", slog.Any("user", v.BidderId))
 	}
 
 	//end auction and awarding the winner

@@ -26,6 +26,9 @@ const (
 
 	endedAuctionQuery = `update auctions set (status, winner_id) = (@status, @winner_id) where id = @auction_id returning *`
 
+	writeTransactionEndedAuctionQuery = `insert into transactions (sender_id, sender_type, recipient_id, recipient_type, amount, transaction_type)
+	values (@auction_id, 'Auction', @bidder_id, 'User', @amount, 'Refund')`
+
 	findLotId = `select l.id
 	from auctions a
 	join lots l on a.lot_id = l.id
