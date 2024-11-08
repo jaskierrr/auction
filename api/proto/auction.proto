@@ -18,7 +18,9 @@ service AuctionService {
   rpc CreateLot (CreateLotRequest) returns (LotResponse);
   rpc GetLot (GetLotRequest) returns (LotResponse);
   rpc PlaceBid (PlaceBidRequest) returns (BidResponse);
+  rpc GetBid (GetBidRequest) returns (BidResponse);
   rpc CloseAuction (CloseAuctionRequest) returns (AuctionResponse);
+  rpc CreateAuction (CreateAuctionRequest) returns (AuctionResponse);
 }
 
 
@@ -90,6 +92,10 @@ message PlaceBidRequest {
   double amount = 3;
 }
 
+message GetBidRequest {
+  int64 auction_id = 1;
+}
+
 message BidResponse {
   Bid bid = 1;
 }
@@ -100,6 +106,10 @@ message Auction {
   int64 lot_id = 2;
   string status = 3; // "Active" or "Ended"
   int64 winner_id = 4;
+}
+
+message CreateAuctionRequest {
+  int64 lot_id = 2;
 }
 
 message CloseAuctionRequest {

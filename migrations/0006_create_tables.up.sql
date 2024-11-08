@@ -29,6 +29,14 @@ CREATE TABLE IF NOT EXISTS bids (
     UNIQUE (auction_id, bidder_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_lots_seller_id ON lots(seller_id);
-CREATE INDEX IF NOT EXISTS idx_bids_auction_id ON bids(auction_id);
-CREATE INDEX IF NOT EXISTS idx_auctions_status ON auctions(status);
+CREATE TABLE IF NOT EXISTS transactions (
+    id BIGSERIAL PRIMARY KEY,
+    sender_id BIGINT,
+    sender_type VARCHAR(10) CHECK (sender_type IN ('User', 'Auction')),
+    recipient_id BIGINT,
+    recipient_type VARCHAR(10) NOT NULL CHECK (recipient_type IN ('User', 'Auction')),
+    amount NUMERIC(15, 2) NOT NULL CHECK (amount > 0),
+    transaction_type VARCHAR(20) NOT NULL CHECK (transaction_type IN ('Deposit', 'Refund', 'Payment')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    description TEXT
+);

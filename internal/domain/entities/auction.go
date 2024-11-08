@@ -5,5 +5,5 @@ type Auction struct {
 	LotId    int64
 	Status   string // Active, Ended
 	Bids     []Bid
-	WinnerId *int64
+	WinnerId int64
 }

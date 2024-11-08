@@ -201,10 +201,12 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	AuctionService_CreateLot_FullMethodName    = "/auction.AuctionService/CreateLot"
-	AuctionService_GetLot_FullMethodName       = "/auction.AuctionService/GetLot"
-	AuctionService_PlaceBid_FullMethodName     = "/auction.AuctionService/PlaceBid"
-	AuctionService_CloseAuction_FullMethodName = "/auction.AuctionService/CloseAuction"
+	AuctionService_CreateLot_FullMethodName     = "/auction.AuctionService/CreateLot"
+	AuctionService_GetLot_FullMethodName        = "/auction.AuctionService/GetLot"
+	AuctionService_PlaceBid_FullMethodName      = "/auction.AuctionService/PlaceBid"
+	AuctionService_GetBid_FullMethodName        = "/auction.AuctionService/GetBid"
+	AuctionService_CloseAuction_FullMethodName  = "/auction.AuctionService/CloseAuction"
+	AuctionService_CreateAuction_FullMethodName = "/auction.AuctionService/CreateAuction"
 )
 
 // AuctionServiceClient is the client API for AuctionService service.
@@ -216,7 +218,9 @@ type AuctionServiceClient interface {
 	CreateLot(ctx context.Context, in *CreateLotRequest, opts ...grpc.CallOption) (*LotResponse, error)
 	GetLot(ctx context.Context, in *GetLotRequest, opts ...grpc.CallOption) (*LotResponse, error)
 	PlaceBid(ctx context.Context, in *PlaceBidRequest, opts ...grpc.CallOption) (*BidResponse, error)
+	GetBid(ctx context.Context, in *GetBidRequest, opts ...grpc.CallOption) (*BidResponse, error)
 	CloseAuction(ctx context.Context, in *CloseAuctionRequest, opts ...grpc.CallOption) (*AuctionResponse, error)
+	CreateAuction(ctx context.Context, in *CreateAuctionRequest, opts ...grpc.CallOption) (*AuctionResponse, error)
 }
 
 type auctionServiceClient struct {
@@ -257,10 +261,30 @@ func (c *auctionServiceClient) PlaceBid(ctx context.Context, in *PlaceBidRequest
 	return out, nil
 }
 
+func (c *auctionServiceClient) GetBid(ctx context.Context, in *GetBidRequest, opts ...grpc.CallOption) (*BidResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BidResponse)
+	err := c.cc.Invoke(ctx, AuctionService_GetBid_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *auctionServiceClient) CloseAuction(ctx context.Context, in *CloseAuctionRequest, opts ...grpc.CallOption) (*AuctionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AuctionResponse)
 	err := c.cc.Invoke(ctx, AuctionService_CloseAuction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *auctionServiceClient) CreateAuction(ctx context.Context, in *CreateAuctionRequest, opts ...grpc.CallOption) (*AuctionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuctionResponse)
+	err := c.cc.Invoke(ctx, AuctionService_CreateAuction_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +300,9 @@ type AuctionServiceServer interface {
 	CreateLot(context.Context, *CreateLotRequest) (*LotResponse, error)
 	GetLot(context.Context, *GetLotRequest) (*LotResponse, error)
 	PlaceBid(context.Context, *PlaceBidRequest) (*BidResponse, error)
+	GetBid(context.Context, *GetBidRequest) (*BidResponse, error)
 	CloseAuction(context.Context, *CloseAuctionRequest) (*AuctionResponse, error)
+	CreateAuction(context.Context, *CreateAuctionRequest) (*AuctionResponse, error)
 	mustEmbedUnimplementedAuctionServiceServer()
 }
 
@@ -296,8 +322,14 @@ func (UnimplementedAuctionServiceServer) GetLot(context.Context, *GetLotRequest)
 func (UnimplementedAuctionServiceServer) PlaceBid(context.Context, *PlaceBidRequest) (*BidResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PlaceBid not implemented")
 }
+func (UnimplementedAuctionServiceServer) GetBid(context.Context, *GetBidRequest) (*BidResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBid not implemented")
+}
 func (UnimplementedAuctionServiceServer) CloseAuction(context.Context, *CloseAuctionRequest) (*AuctionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CloseAuction not implemented")
+}
+func (UnimplementedAuctionServiceServer) CreateAuction(context.Context, *CreateAuctionRequest) (*AuctionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAuction not implemented")
 }
 func (UnimplementedAuctionServiceServer) mustEmbedUnimplementedAuctionServiceServer() {}
 func (UnimplementedAuctionServiceServer) testEmbeddedByValue()                        {}
@@ -374,6 +406,24 @@ func _AuctionService_PlaceBid_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuctionService_GetBid_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBidRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuctionServiceServer).GetBid(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuctionService_GetBid_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuctionServiceServer).GetBid(ctx, req.(*GetBidRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AuctionService_CloseAuction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CloseAuctionRequest)
 	if err := dec(in); err != nil {
@@ -388,6 +438,24 @@ func _AuctionService_CloseAuction_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuctionServiceServer).CloseAuction(ctx, req.(*CloseAuctionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuctionService_CreateAuction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAuctionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuctionServiceServer).CreateAuction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuctionService_CreateAuction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuctionServiceServer).CreateAuction(ctx, req.(*CreateAuctionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -412,8 +480,16 @@ var AuctionService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AuctionService_PlaceBid_Handler,
 		},
 		{
+			MethodName: "GetBid",
+			Handler:    _AuctionService_GetBid_Handler,
+		},
+		{
 			MethodName: "CloseAuction",
 			Handler:    _AuctionService_CloseAuction_Handler,
+		},
+		{
+			MethodName: "CreateAuction",
+			Handler:    _AuctionService_CreateAuction_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

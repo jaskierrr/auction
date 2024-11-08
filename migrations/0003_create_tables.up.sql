@@ -29,6 +29,4 @@ CREATE TABLE IF NOT EXISTS bids (
     UNIQUE (auction_id, bidder_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_lots_seller_id ON lots(seller_id);
-CREATE INDEX IF NOT EXISTS idx_bids_auction_id ON bids(auction_id);
-CREATE INDEX IF NOT EXISTS idx_auctions_status ON auctions(status);
+CREATE INDEX IF NOT EXISTS idx_users_id ON users(id);

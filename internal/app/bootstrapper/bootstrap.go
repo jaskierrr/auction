@@ -8,7 +8,8 @@ import (
 	"main/internal/config"
 	"main/internal/domain/services"
 	"main/internal/infrastructure/database"
-	repo "main/internal/infrastructure/database/repositories"
+	userRepo "main/internal/infrastructure/database/repositories/user_repository"
+	auctionRepo "main/internal/infrastructure/database/repositories/auction_repository"
 	"main/pkg/logger"
 	"net"
 
@@ -21,14 +22,14 @@ type bootstrapper struct {
 	db     database.DB
 
 	user struct {
-		repo repo.UserRepo
+		repo userRepo.UserRepo
 		service service.UserService
 		usecase app.UserUsecase
 	}
 
 
 	auction struct {
-		repo repo.AuctionRepo
+		repo auctionRepo.AuctionRepo
 		service service.AuctionService
 		usecase app.AuctionUsecase
 	}
@@ -66,11 +67,11 @@ func (b *bootstrapper) registerAPIServer(cfg config.Config) error {
 
 	b.db = database.NewDB().NewConn(context.Background(), cfg)
 
-	b.user.repo = repo.NewUserRepo(b.db, b.logger)
+	b.user.repo = userRepo.NewUserRepo(b.db, b.logger)
 	b.user.service = service.NewUserService(b.user.repo)
 	b.user.usecase = app.NewUserUsecase(b.user.service, b.logger)
 
-	b.auction.repo = repo.NewAuctionRepo(b.db, b.logger)
+	b.auction.repo = auctionRepo.NewAuctionRepo(b.db, b.logger)
 	b.auction.service = service.NewAuctionService(b.auction.repo)
 	b.auction.usecase = app.NewAuctionUsecase(b.auction.service, b.logger)
 

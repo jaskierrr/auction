@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"main/internal/infrastructure/database/repositories"
+	"main/internal/infrastructure/database/repositories/user_repository"
 	pb "main/pkg/grpc"
 )
 
