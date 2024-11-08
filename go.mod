@@ -4,7 +4,6 @@ go 1.23.0
 
 require (
 	github.com/fatih/color v1.18.0
-	github.com/golang/mock v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.23.0
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/joho/godotenv v1.5.1
