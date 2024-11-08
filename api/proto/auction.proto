@@ -4,23 +4,67 @@ package auction;
 
 option go_package = "./pkg/grpc;grpc";
 
+
+import "api/proto/google/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
 // --- User Service ---
 service UserService {
-  rpc CreateUser (CreateUserRequest) returns (UserResponse);
-  rpc GetUser (GetUserRequest) returns (UserResponse);
-  rpc DepositBalance (DepositBalanceRequest) returns (BalanceResponse);
+  rpc CreateUser (CreateUserRequest) returns (UserResponse) {
+    option (google.api.http) = {
+      post: "/user"
+      body: "*"
+    };
+  };
+  rpc GetUser (GetUserRequest) returns (UserResponse) {
+    option (google.api.http) = {
+      get: "/user/{user_id}"
+    };
+  };
+  rpc DepositBalance (DepositBalanceRequest) returns (BalanceResponse){
+    option (google.api.http) = {
+      patch: "/user"
+      body: "*"
+    };
+  };
 }
 
 // --- Auction Service ---
 service AuctionService {
-  rpc CreateLot (CreateLotRequest) returns (LotResponse);
-  rpc GetLot (GetLotRequest) returns (LotResponse);
-  rpc PlaceBid (PlaceBidRequest) returns (BidResponse);
-  rpc GetBid (GetBidRequest) returns (BidResponse);
-  rpc CloseAuction (CloseAuctionRequest) returns (AuctionResponse);
-  rpc CreateAuction (CreateAuctionRequest) returns (AuctionResponse);
+  rpc CreateLot (CreateLotRequest) returns (LotResponse) {
+    option (google.api.http) = {
+      post: "/lot"
+      body: "*"
+    };
+  };
+  rpc GetLot (GetLotRequest) returns (LotResponse) {
+    option (google.api.http) = {
+      get: "/lot/{lot_id}"
+    };
+  };
+  rpc PlaceBid (PlaceBidRequest) returns (BidResponse) {
+    option (google.api.http) = {
+      post: "/bid"
+      body: "*"
+    };
+  };
+  rpc GetBid (GetBidRequest) returns (BidResponse) {
+    option (google.api.http) = {
+      get: "/bid/{auction_id}"
+    };
+  };
+  rpc CloseAuction (CloseAuctionRequest) returns (AuctionResponse) {
+    option (google.api.http) = {
+      patch: "/auction"
+      body: "*"
+    };
+  };
+  rpc CreateAuction (CreateAuctionRequest) returns (AuctionResponse) {
+    option (google.api.http) = {
+      post: "/auction"
+      body: "*"
+    };
+  };
 }
 
 
@@ -109,7 +153,7 @@ message Auction {
 }
 
 message CreateAuctionRequest {
-  int64 lot_id = 2;
+  int64 lot_id = 1;
 }
 
 message CloseAuctionRequest {

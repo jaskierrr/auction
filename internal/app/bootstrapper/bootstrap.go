@@ -6,14 +6,18 @@ import (
 	"log/slog"
 	app "main/internal/app/usercases"
 	"main/internal/config"
-	"main/internal/domain/services"
+	service "main/internal/domain/services"
 	"main/internal/infrastructure/database"
-	userRepo "main/internal/infrastructure/database/repositories/user_repository"
 	auctionRepo "main/internal/infrastructure/database/repositories/auction_repository"
+	userRepo "main/internal/infrastructure/database/repositories/user_repository"
+	pb "main/pkg/grpc"
 	"main/pkg/logger"
 	"net"
+	"net/http"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type bootstrapper struct {
@@ -22,14 +26,13 @@ type bootstrapper struct {
 	db     database.DB
 
 	user struct {
-		repo userRepo.UserRepo
+		repo    userRepo.UserRepo
 		service service.UserService
 		usecase app.UserUsecase
 	}
 
-
 	auction struct {
-		repo auctionRepo.AuctionRepo
+		repo    auctionRepo.AuctionRepo
 		service service.AuctionService
 		usecase app.AuctionUsecase
 	}
@@ -63,7 +66,6 @@ func (b *bootstrapper) registerAPIServer(cfg config.Config) error {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
 
 	b.db = database.NewDB().NewConn(context.Background(), cfg)
 
@@ -75,8 +77,28 @@ func (b *bootstrapper) registerAPIServer(cfg config.Config) error {
 	b.auction.service = service.NewAuctionService(b.auction.repo)
 	b.auction.usecase = app.NewAuctionUsecase(b.auction.service, b.logger)
 
+	//** start gRPC-Gateway
+	go func() {
+		ctx := context.Background()
+		ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+		 mux := runtime.NewServeMux(
+			runtime.WithIncomingHeaderMatcher(CustomMatcher),
+		 )
+		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+		err = pb.RegisterAuctionServiceHandlerFromEndpoint(ctx, mux, cfg.ServerPort, opts)
+		if err != nil {
+			log.Fatalf("failed to start HTTP gateway: %v", err)
+		}
 
+		log.Println("HTTP gateway listening on :8081")
+		if err := http.ListenAndServe(":8081", mux); err != nil {
+			log.Fatalf("failed to serve HTTP gateway: %v", err)
+		}
+	}()
 
+	//** start gRPC server
+	s := grpc.NewServer()
 	app.RegisterGRPC(s, b.user.usecase, b.auction.usecase)
 	log.Printf("server listening at %v", lis.Addr())
 
@@ -85,5 +107,15 @@ func (b *bootstrapper) registerAPIServer(cfg config.Config) error {
 		log.Fatalf("failed to serve: %v", err)
 	}
 
+
 	return nil
 }
+
+func CustomMatcher(key string) (string, bool) {
+		switch key {
+		case "X-User-Id":
+		return key, true
+		default:
+		return runtime.DefaultHeaderMatcher(key)
+	}
+ }
