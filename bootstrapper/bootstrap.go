@@ -4,12 +4,12 @@ import (
 	"context"
 	"log"
 	"log/slog"
-	app "main/internal/app/usercases"
-	"main/internal/config"
-	service "main/internal/domain/services"
+	"main/internal/handlers"
+	"main/config"
+	service "main/internal/services"
 	"main/internal/infrastructure/database"
-	auctionRepo "main/internal/infrastructure/database/repositories/auction_repository"
-	userRepo "main/internal/infrastructure/database/repositories/user_repository"
+	auctionRepo "main/internal/repositories/auction_repository"
+	userRepo "main/internal/repositories/user_repository"
 	pb "main/pkg/grpc"
 	"main/pkg/logger"
 	"net"
@@ -28,13 +28,13 @@ type bootstrapper struct {
 	user struct {
 		repo    userRepo.UserRepo
 		service service.UserService
-		usecase app.UserUsecase
+		handlers handlers.UserHandlers
 	}
 
 	auction struct {
 		repo    auctionRepo.AuctionRepo
 		service service.AuctionService
-		usecase app.AuctionUsecase
+		handlers handlers.AuctionHandlers
 	}
 }
 
@@ -66,25 +66,24 @@ func (b *bootstrapper) registerAPIServer(cfg config.Config) error {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-
 	b.db = database.NewDB().NewConn(context.Background(), cfg)
 
 	b.user.repo = userRepo.NewUserRepo(b.db, b.logger)
 	b.user.service = service.NewUserService(b.user.repo)
-	b.user.usecase = app.NewUserUsecase(b.user.service, b.logger)
+	b.user.handlers = handlers.NewUserHandlers(b.user.service, b.logger)
 
 	b.auction.repo = auctionRepo.NewAuctionRepo(b.db, b.logger)
 	b.auction.service = service.NewAuctionService(b.auction.repo)
-	b.auction.usecase = app.NewAuctionUsecase(b.auction.service, b.logger)
+	b.auction.handlers = handlers.NewAuctionHandlers(b.auction.service, b.logger)
 
 	//** start gRPC-Gateway
 	go func() {
 		ctx := context.Background()
 		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
-		 mux := runtime.NewServeMux(
+		mux := runtime.NewServeMux(
 			runtime.WithIncomingHeaderMatcher(CustomMatcher),
-		 )
+		)
 		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 		err = pb.RegisterAuctionServiceHandlerFromEndpoint(ctx, mux, cfg.ServerPort, opts)
 		if err != nil {
@@ -99,7 +98,7 @@ func (b *bootstrapper) registerAPIServer(cfg config.Config) error {
 
 	//** start gRPC server
 	s := grpc.NewServer()
-	app.RegisterGRPC(s, b.user.usecase, b.auction.usecase)
+	handlers.RegisterGRPC(s, b.user.handlers, b.auction.handlers)
 	log.Printf("server listening at %v", lis.Addr())
 
 	err = s.Serve(lis)
@@ -107,15 +106,14 @@ func (b *bootstrapper) registerAPIServer(cfg config.Config) error {
 		log.Fatalf("failed to serve: %v", err)
 	}
 
-
 	return nil
 }
 
 func CustomMatcher(key string) (string, bool) {
-		switch key {
-		case "X-User-Id":
+	switch key {
+	case "X-User-Id":
 		return key, true
-		default:
+	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}
- }
+}

@@ -358,7 +358,7 @@ func RegisterUserServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/auction.UserService/CreateUser", runtime.WithHTTPPathPattern("/user"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/auction.UserService/CreateUser", runtime.WithHTTPPathPattern("/create/user"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -408,7 +408,7 @@ func RegisterUserServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/auction.UserService/DepositBalance", runtime.WithHTTPPathPattern("/user"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/auction.UserService/DepositBalance", runtime.WithHTTPPathPattern("/deposit-balance"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -632,7 +632,7 @@ func RegisterUserServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/auction.UserService/CreateUser", runtime.WithHTTPPathPattern("/user"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/auction.UserService/CreateUser", runtime.WithHTTPPathPattern("/create/user"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -676,7 +676,7 @@ func RegisterUserServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/auction.UserService/DepositBalance", runtime.WithHTTPPathPattern("/user"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/auction.UserService/DepositBalance", runtime.WithHTTPPathPattern("/deposit-balance"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -696,11 +696,11 @@ func RegisterUserServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 }
 
 var (
-	pattern_UserService_CreateUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"user"}, ""))
+	pattern_UserService_CreateUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "user"}, ""))
 
 	pattern_UserService_GetUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"user", "user_id"}, ""))
 
-	pattern_UserService_DepositBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"user"}, ""))
+	pattern_UserService_DepositBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"deposit-balance"}, ""))
 )
 
 var (

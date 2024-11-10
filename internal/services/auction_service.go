@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"main/internal/infrastructure/database/repositories/auction_repository"
+	"main/internal/repositories/auction_repository"
 	pb "main/pkg/grpc"
 
 	"google.golang.org/protobuf/types/known/timestamppb"

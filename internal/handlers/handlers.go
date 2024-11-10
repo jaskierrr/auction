@@ -1,39 +1,39 @@
-package app
+package handlers
 
 import (
 	"log/slog"
-	service "main/internal/domain/services"
+	service "main/internal/services"
 	pb "main/pkg/grpc"
 
 	"google.golang.org/grpc"
 )
 
-type UserUsecase struct {
+type UserHandlers struct {
 	pb.UnimplementedUserServiceServer
 	logger  *slog.Logger
 	service service.UserService
 }
 
-type AuctionUsecase struct {
+type AuctionHandlers struct {
 	pb.UnimplementedAuctionServiceServer
 	logger  *slog.Logger
 	service service.AuctionService
 }
 
-func NewUserUsecase(service service.UserService, logger *slog.Logger) UserUsecase {
-	return UserUsecase{
+func NewUserHandlers(service service.UserService, logger *slog.Logger) UserHandlers {
+	return UserHandlers{
 		logger:  logger,
 		service: service,
 	}
 }
-func NewAuctionUsecase(service service.AuctionService, logger *slog.Logger) AuctionUsecase {
-	return AuctionUsecase{
+func NewAuctionHandlers(service service.AuctionService, logger *slog.Logger) AuctionHandlers {
+	return AuctionHandlers{
 		logger:  logger,
 		service: service,
 	}
 }
 
-func RegisterGRPC(grpc *grpc.Server, userUC UserUsecase, auctionUC AuctionUsecase) {
+func RegisterGRPC(grpc *grpc.Server, userUC UserHandlers, auctionUC AuctionHandlers) {
 	pb.RegisterUserServiceServer(grpc, &userUC)
 	pb.RegisterAuctionServiceServer(grpc, &auctionUC)
 }

@@ -1,4 +1,4 @@
-package app
+package handlers
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	status "google.golang.org/grpc/status"
 )
 
-func (s *AuctionUsecase) CreateLot(ctx context.Context, in *pb.CreateLotRequest) (*pb.LotResponse, error) {
+func (s *AuctionHandlers) CreateLot(ctx context.Context, in *pb.CreateLotRequest) (*pb.LotResponse, error) {
 	lot, err := s.service.CreateLot(ctx, in)
 
 	if err != nil {
@@ -19,7 +19,7 @@ func (s *AuctionUsecase) CreateLot(ctx context.Context, in *pb.CreateLotRequest)
 	return &pb.LotResponse{Lot: &lot}, nil
 }
 
-func (s *AuctionUsecase) GetLot(ctx context.Context, in *pb.GetLotRequest) (*pb.LotResponse, error) {
+func (s *AuctionHandlers) GetLot(ctx context.Context, in *pb.GetLotRequest) (*pb.LotResponse, error) {
 	lot, err := s.service.GetLot(ctx, in)
 
 	if err != nil {
@@ -30,7 +30,7 @@ func (s *AuctionUsecase) GetLot(ctx context.Context, in *pb.GetLotRequest) (*pb.
 	return &pb.LotResponse{Lot: &lot}, nil
 }
 
-func (s *AuctionUsecase) CreateAuction(ctx context.Context, in *pb.CreateAuctionRequest) (*pb.AuctionResponse, error) {
+func (s *AuctionHandlers) CreateAuction(ctx context.Context, in *pb.CreateAuctionRequest) (*pb.AuctionResponse, error) {
 	auction, err := s.service.CreateAuction(ctx, in)
 
 	if err != nil {
@@ -41,7 +41,7 @@ func (s *AuctionUsecase) CreateAuction(ctx context.Context, in *pb.CreateAuction
 	return &pb.AuctionResponse{Auction: &auction}, nil
 }
 
-func (s *AuctionUsecase) CloseAuction(ctx context.Context, in *pb.CloseAuctionRequest) (*pb.AuctionResponse, error) {
+func (s *AuctionHandlers) CloseAuction(ctx context.Context, in *pb.CloseAuctionRequest) (*pb.AuctionResponse, error) {
 	auction, err := s.service.CloseAuction(ctx, in)
 
 	if err != nil {
@@ -52,7 +52,7 @@ func (s *AuctionUsecase) CloseAuction(ctx context.Context, in *pb.CloseAuctionRe
 	return &pb.AuctionResponse{Auction: &auction}, nil
 }
 
-func (s *AuctionUsecase) PlaceBid(ctx context.Context, in *pb.PlaceBidRequest) (*pb.BidResponse, error) {
+func (s *AuctionHandlers) PlaceBid(ctx context.Context, in *pb.PlaceBidRequest) (*pb.BidResponse, error) {
 	bid, err := s.service.PlaceBid(ctx, in)
 
 	if err != nil {
@@ -63,12 +63,12 @@ func (s *AuctionUsecase) PlaceBid(ctx context.Context, in *pb.PlaceBidRequest) (
 	return &pb.BidResponse{Bid: &bid}, nil
 }
 
-func (s *AuctionUsecase) GetBid(ctx context.Context, in *pb.GetBidRequest) (*pb.BidResponse, error) {
+func (s *AuctionHandlers) GetBid(ctx context.Context, in *pb.GetBidRequest) (*pb.BidResponse, error) {
 	bid, err := s.service.GetBid(ctx, in)
 
 	if err != nil {
 		s.logger.Error("failed get bid: " + err.Error())
-		return &pb.BidResponse{}, status.Errorf(codes.Unknown, "failed place bid: %v\n", err)
+		return &pb.BidResponse{}, status.Errorf(codes.Unknown, "failed get bid: %v\n", err)
 	}
 
 	return &pb.BidResponse{Bid: &bid}, nil

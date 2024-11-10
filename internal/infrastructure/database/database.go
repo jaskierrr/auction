@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"main/internal/config"
+	"main/config"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -12,7 +12,6 @@ import (
 const dbConfigString = "postgres://%s:%s@%s:%s/%s"
 
 type db struct {
-	// logger *slog.Logger
 	conn   *pgx.Conn
 }
 
@@ -37,8 +36,6 @@ func (d *db) NewConn(ctx context.Context, config config.Config) DB {
 	if err != nil {
 		log.Fatalf("Failed to ping the database: %v\n", err)
 	}
-
-	// logger.Info("New Postgres connection opened")
 
 	return &db{
 		conn:   conn,

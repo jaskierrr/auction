@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"main/internal/domain/entities"
+	"main/internal/entities"
 	pb "main/pkg/grpc"
 	"strconv"
 

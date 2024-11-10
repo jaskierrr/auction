@@ -3,7 +3,7 @@ package repositories
 import (
 	"context"
 	"log/slog"
-	"main/internal/domain/entities"
+	"main/internal/entities"
 	"main/internal/infrastructure/database"
 	pb "main/pkg/grpc"
 )

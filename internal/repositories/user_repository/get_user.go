@@ -3,20 +3,20 @@ package repositories
 import (
 	"context"
 	"log/slog"
-	"main/internal/domain/entities"
+	"main/internal/entities"
 	pb "main/pkg/grpc"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (repo *userRepo) CreateUser(ctx context.Context, in *pb.CreateUserRequest) (entities.User, error) {
+func (repo *userRepo) GetUser(ctx context.Context, in *pb.GetUserRequest) (entities.User, error) {
 	args := pgx.NamedArgs{
-		"name": in.Name,
+		"userID": in.UserId,
 	}
 	user := entities.User{}
 	err := repo.db.
 		GetConn().
-		QueryRow(ctx, createUserQuery, args).
+		QueryRow(ctx, getUserIDQuery, args).
 		Scan(&user.Id, &user.Name, &user.Balance)
 
 	if err != nil {
@@ -24,7 +24,7 @@ func (repo *userRepo) CreateUser(ctx context.Context, in *pb.CreateUserRequest) 
 	}
 
 	repo.logger.Info(
-		"Success create user in storage",
+		"Success get user from storage",
 		slog.Any("userID", user.Id),
 	)
 

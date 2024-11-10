@@ -3,7 +3,7 @@ package repositories
 import (
 	"context"
 	"log/slog"
-	"main/internal/domain/entities"
+	"main/internal/entities"
 	pb "main/pkg/grpc"
 
 	"github.com/jackc/pgx/v5"

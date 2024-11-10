@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"main/internal/app/bootstrapper"
+	"main/bootstrapper"
 )
 
 func main() {
