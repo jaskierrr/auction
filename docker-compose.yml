@@ -43,9 +43,6 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    # depends_on:
-    #   postgers:
-    #     condition: service_healthy
     ports:
       - "8080:8080"
       - "8081:8081"
@@ -55,6 +52,11 @@ services:
   migrate:
     container_name: auction_migrater
     image: migrate/migrate
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 15
+        window: 20s
     depends_on:
       - postgres
     volumes:
