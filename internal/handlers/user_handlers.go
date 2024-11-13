@@ -35,7 +35,7 @@ func (s *UserHandlers) DepositBalance(ctx context.Context, in *pb.DepositBalance
 
 	if err != nil {
 		s.logger.Error("failed deposite balance: " + err.Error())
-		return &pb.BalanceResponse{}, status.Errorf(codes.Unknown, "failed get user: %v\n", err)
+		return &pb.BalanceResponse{}, status.Errorf(codes.Unknown, "failed deposite balance: %v\n", err)
 	}
 
 	return balance, nil

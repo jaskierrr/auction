@@ -50,7 +50,7 @@ service AuctionService {
   };
   rpc GetBid (GetBidRequest) returns (BidResponse) {
     option (google.api.http) = {
-      get: "/bid/{auction_id}"
+      get: "/bid/{id}"
     };
   };
   rpc CloseAuction (CloseAuctionRequest) returns (AuctionResponse) {
@@ -137,7 +137,7 @@ message PlaceBidRequest {
 }
 
 message GetBidRequest {
-  int64 auction_id = 1;
+  int64 id = 1;
 }
 
 message BidResponse {

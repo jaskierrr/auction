@@ -7,6 +7,7 @@ import (
 	pb "main/pkg/grpc"
 	"strconv"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -30,17 +31,7 @@ func (repo *userRepo) DepositBalance(ctx context.Context, in *pb.DepositBalanceR
 		}
 	}()
 
-	args := pgx.NamedArgs{
-		"userID": in.UserId,
-		"amount": in.Amount,
-	}
-
-	var strBalance string
-
-	err = tx.
-		QueryRow(ctx, depositBalanceQuery, args).
-		Scan(&strBalance)
-
+	strBalance, err := updateBalance(ctx, tx, in)
 	if err != nil {
 		return &pb.BalanceResponse{}, err
 	}
@@ -48,9 +39,7 @@ func (repo *userRepo) DepositBalance(ctx context.Context, in *pb.DepositBalanceR
 	balance, _ := strconv.ParseFloat(strBalance, 64)
 	res := &pb.BalanceResponse{NewBalance: balance}
 
-	_, err = tx.
-		Exec(ctx, writeTransactionQuery, args)
-
+	err = writeTransaction(ctx, tx, in)
 	if err != nil {
 		err = errors.Join(errors.New("cant write transaction"), err)
 		return &pb.BalanceResponse{}, err
@@ -64,4 +53,40 @@ func (repo *userRepo) DepositBalance(ctx context.Context, in *pb.DepositBalanceR
 	)
 
 	return res, nil
+}
+
+func updateBalance(ctx context.Context, tx pgx.Tx, in *pb.DepositBalanceRequest) (string, error) {
+	sql, args, err := sq.Update("users").
+										Set("balance", sq.Expr("balance + ?", in.Amount)).
+										Where(sq.Eq{"id": in.UserId}).
+										Suffix("returning balance::Text").
+										PlaceholderFormat(sq.Dollar).
+										ToSql()
+
+	if err != nil {
+		return "", err
+	}
+
+	var strBalance string
+	err = tx.
+	QueryRow(ctx, sql, args...).
+	Scan(&strBalance)
+
+	return strBalance, err
+}
+
+func writeTransaction(ctx context.Context, tx pgx.Tx, in *pb.DepositBalanceRequest) error {
+	sql, args, err := sq.Insert("transactions").
+										Columns("recipient_id", "recipient_type", "amount", "transaction_type").
+										Values(in.UserId, "User", in.Amount, "Deposit").
+										PlaceholderFormat(sq.Dollar).
+										ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.
+	Exec(ctx, sql, args...)
+
+	return err
 }

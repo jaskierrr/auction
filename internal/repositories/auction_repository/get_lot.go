@@ -6,17 +6,23 @@ import (
 	"main/internal/entities"
 	pb "main/pkg/grpc"
 
-	"github.com/jackc/pgx/v5"
+	sq "github.com/Masterminds/squirrel"
 )
 
 func (repo *auctionRepo) GetLot(ctx context.Context, in *pb.GetLotRequest) (entities.Lot, error) {
-	args := pgx.NamedArgs{
-		"lot_id": in.LotId,
+	sql, args, err := sq.Select("*").
+										From("lots").
+										Where(sq.Eq{"id": in.LotId}).
+										PlaceholderFormat(sq.Dollar).
+										ToSql()
+	if err != nil {
+		return entities.Lot{}, err
 	}
+
 	lot := entities.Lot{}
-	err := repo.db.
+	err = repo.db.
 		GetConn().
-		QueryRow(ctx, getLotQuery, args).
+		QueryRow(ctx, sql, args...).
 		Scan(&lot.Id, &lot.Title, &lot.Description, &lot.StartingBid, &lot.SellerId, &lot.Status)
 
 	if err != nil {

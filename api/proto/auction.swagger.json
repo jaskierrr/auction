@@ -113,7 +113,7 @@
         ]
       }
     },
-    "/bid/{auctionId}": {
+    "/bid/{id}": {
       "get": {
         "operationId": "AuctionService_GetBid",
         "responses": {
@@ -132,7 +132,7 @@
         },
         "parameters": [
           {
-            "name": "auctionId",
+            "name": "id",
             "in": "path",
             "required": true,
             "type": "string",

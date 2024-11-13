@@ -6,17 +6,26 @@ import (
 	"main/internal/entities"
 	pb "main/pkg/grpc"
 
-	"github.com/jackc/pgx/v5"
+	sq "github.com/Masterminds/squirrel"
+
 )
 
 func (repo *userRepo) CreateUser(ctx context.Context, in *pb.CreateUserRequest) (entities.User, error) {
-	args := pgx.NamedArgs{
-		"name": in.Name,
+	sql, args, err := sq.Insert("users").
+											Columns("name").
+											Values(in.Name).
+											Suffix("returning *").
+											PlaceholderFormat(sq.Dollar).
+											ToSql()
+
+	if err != nil {
+		return entities.User{}, err
 	}
+
 	user := entities.User{}
-	err := repo.db.
+	err = repo.db.
 		GetConn().
-		QueryRow(ctx, createUserQuery, args).
+		QueryRow(ctx, sql, args...).
 		Scan(&user.Id, &user.Name, &user.Balance)
 
 	if err != nil {

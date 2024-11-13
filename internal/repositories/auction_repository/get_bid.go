@@ -7,19 +7,26 @@ import (
 	pb "main/pkg/grpc"
 	"strconv"
 
-	"github.com/jackc/pgx/v5"
+	sq "github.com/Masterminds/squirrel"
 )
 
+
 func (repo *auctionRepo) GetBid(ctx context.Context, in *pb.GetBidRequest) (entities.Bid, error) {
-	args := pgx.NamedArgs{
-		"auction_id": in.AuctionId,
+	sql, args, err := sq.Select("*").
+											From("bids").
+											Where(sq.Eq{"id": in.Id}).
+											PlaceholderFormat(sq.Dollar).
+											ToSql()
+
+	if err != nil {
+		return entities.Bid{}, err
 	}
 
 	var amountStr string
 	bid := entities.Bid{}
-	err := repo.db.
+	err = repo.db.
 		GetConn().
-		QueryRow(ctx, getBidQuery, args).
+		QueryRow(ctx, sql, args...).
 		Scan(&bid.Id, &bid.AuctionId, &bid.BidderId, &amountStr, &bid.CreatedAt)
 
 	if err != nil {

@@ -6,18 +6,24 @@ import (
 	"main/internal/entities"
 	pb "main/pkg/grpc"
 
-	"github.com/jackc/pgx/v5"
+	sq "github.com/Masterminds/squirrel"
 )
 
 func (repo *auctionRepo) CreateAuction(ctx context.Context, in *pb.CreateAuctionRequest) (entities.Auction, error) {
-	args := pgx.NamedArgs{
-		"lot_id": in.LotId,
-		"status": activeAuctionStatus,
+	sql, args, err := sq.Insert("auctions").
+											Columns("lot_id", "status").
+											Values(in.LotId, activeAuctionStatus).
+											Suffix("returning id, lot_id, status").
+											PlaceholderFormat(sq.Dollar).
+											ToSql()
+
+	if err != nil {
+		return entities.Auction{}, err
 	}
 	auction := entities.Auction{}
-	err := repo.db.
+	err = repo.db.
 		GetConn().
-		QueryRow(ctx, createAuctionQuery, args).
+		QueryRow(ctx, sql, args...).
 		Scan(&auction.Id, &auction.LotId, &auction.Status)
 
 	if err != nil {

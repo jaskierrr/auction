@@ -8,6 +8,7 @@ import (
 	pb "main/pkg/grpc"
 	"strconv"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -35,19 +36,132 @@ func (repo *auctionRepo) CloseAuction(ctx context.Context, in *pb.CloseAuctionRe
 		}
 	}()
 
-	args := pgx.NamedArgs{
-		"auction_id": in.AuctionId,
-		"status":     closedAuctionStatus,
-	}
-
 	//find all bids on this auction
-	bidsRow, err := tx.
-		Query(ctx, getBidsQuery, args)
+	auction, err := findAllBids(ctx, repo, tx, in)
 
 	if err != nil {
-		repo.logger.Error("failed find all bids on this auction: " + err.Error())
+		err = errors.Join(errors.New("failed find all bids on this auction: "), err)
 		return entities.Auction{}, err
 	}
+
+
+	var winnerBid entities.Bid
+	var winnerIndx int
+
+	for i, v := range auction.Bids {
+		if v.Amount > winnerBid.Amount {
+			winnerBid = v
+			winnerIndx = i
+		}
+	}
+
+	//awarding the winner
+	auction, err = awardingWinner(ctx, tx, in, auction, winnerBid)
+
+	if err != nil {
+		err = errors.Join(errors.New("cant award winner"), err)
+		return entities.Auction{}, err
+	}
+	if auction.Status == endedAuctionStatus {
+		err = errors.New("cant end auction it is already over")
+		return entities.Auction{}, err
+	}
+
+	// end auction
+	auction, err = endAuction(ctx, tx, in, auction)
+
+	if err != nil {
+		err = errors.Join(errors.New("failed end auction and award the winner: "), err)
+		return entities.Auction{}, err
+	}
+
+	// find lot id
+	lotID, err := findLotID(ctx, tx, in)
+
+	if err != nil {
+		err = errors.Join(errors.New("cant find lot id: "), err)
+		return entities.Auction{}, err
+	}
+
+	// close lot
+	err = closeLot(ctx, tx, in, lotID)
+
+	if err != nil {
+		repo.logger.Error(
+			"Error",
+			slog.Any("cant close lot", err),
+		)
+	}
+
+	//! bids without winner
+	if len(auction.Bids) > 1 {
+		bidsWithoutWinner := append(auction.Bids[:winnerIndx], auction.Bids[winnerIndx+1:]...)
+
+		repo.logger.Info(
+			"arr bis without winner",
+			slog.Any("without WINNER", bidsWithoutWinner),
+		)
+		//return money money money and write transaction
+		for _, v := range bidsWithoutWinner {
+			user, err := returnMoney(ctx, tx, v)
+
+			repo.logger.Info(
+				"Return money to users",
+				slog.Any("userID", user.Id),
+				slog.Any("Name", user.Name),
+				slog.Any("old balance", user.Balance-v.Amount),
+				slog.Any("new balance", user.Balance),
+			)
+
+			if err != nil {
+				return entities.Auction{}, err
+			}
+
+			err = closeAuctionWriteTransaction(ctx, tx, in, v)
+
+			if err != nil {
+				err = errors.Join(err, errors.New("cant write transaction"))
+				return entities.Auction{}, err
+			}
+			repo.logger.Info("Trans write!", slog.Any("user", v.BidderId))
+	}
+	} else {
+		repo.logger.Info(
+			"it was one bidder, auction closed without refund",
+		)
+	}
+
+	repo.logger.Error(
+		"Error",
+		slog.Any("err", err),
+	)
+
+	tx.Commit(ctx)
+
+	repo.logger.Info(
+		"Success close auction in storage",
+		slog.Any("auctionID", auction.Id),
+	)
+
+	return auction, nil
+}
+
+// getBidsQuery = `select * from bids where auction_id = @auction_id`
+
+
+func findAllBids(ctx context.Context, repo *auctionRepo, tx pgx.Tx, in *pb.CloseAuctionRequest) (entities.Auction, error){
+	sql, args, err := sq.Select("*").
+											From("bids").
+											Where(sq.Eq{"auction_id": in.AuctionId}).
+											PlaceholderFormat(sq.Dollar).
+											ToSql()
+
+	if err != nil {
+		return entities.Auction{}, err
+	}
+
+	bidsRow, err := tx.
+	Query(ctx, sql, args...)
 
 	auction := entities.Auction{
 		Bids: make([]entities.Bid, 0),
@@ -70,101 +184,132 @@ func (repo *auctionRepo) CloseAuction(ctx context.Context, in *pb.CloseAuctionRe
 	}
 	bidsRow.Close()
 
-	var winnerBid entities.Bid
-	var winnerIndx int
+	repo.logger.Info(
+		"auction",
+		slog.Any("auction",auction),
+	)
+	return auction, err
+}
 
-	for i, v := range auction.Bids {
-		if v.Amount > winnerBid.Amount {
-			winnerBid = v
-			winnerIndx = i
-		}
+// addWinnerAuctionQuery = `update auctions set winner_id = @winner_id where id = @auction_id returning *`
 
-		argsForTrans := pgx.NamedArgs{
-			"auction_id": in.AuctionId,
-			"bidder_id": v.BidderId,
-			"amount": v.Amount,
-		}
-		_, err = tx.Exec(ctx, writeTransactionEndedAuctionQuery, argsForTrans)
-		if err != nil {
-			err = errors.Join(err, errors.New("cant write transaction"))
-			return entities.Auction{}, err
-		}
-		repo.logger.Info("Trans write!", slog.Any("user", v.BidderId))
+func awardingWinner(ctx context.Context,tx pgx.Tx, in *pb.CloseAuctionRequest, auction entities.Auction, winnerBid entities.Bid) (entities.Auction, error){
+	sql, args, err := sq.Update("auctions").
+											Set("winner_id", winnerBid.BidderId).
+											Where(sq.Eq{"id": in.AuctionId}).
+											Suffix("returning *").
+											PlaceholderFormat(sq.Dollar).
+											ToSql()
+
+	if err != nil {
+		return entities.Auction{}, err
 	}
 
-	//end auction and awarding the winner
-	args["winner_id"] = winnerBid.BidderId
-
 	err = tx.
-		QueryRow(ctx, endedAuctionQuery, args).
+		QueryRow(ctx, sql, args...).
 		Scan(&auction.Id, &auction.LotId, &auction.Status, &auction.WinnerId)
 
-	if auction.Status == closedAuctionStatus {
-		err = errors.New("cant end auction it is already over")
-		return entities.Auction{}, err
-	}
+	return auction, err
+}
+
+// endAuctionQuery = `update auctions set status = @status where id = @auction_idreturning *`
+
+func endAuction(ctx context.Context,tx pgx.Tx, in *pb.CloseAuctionRequest, auction entities.Auction) (entities.Auction, error){
+	sql, args, err := sq.Update("auctions").
+											Set("status", endedAuctionStatus).
+											Where(sq.Eq{"id": in.AuctionId}).
+											Suffix("returning *").
+											PlaceholderFormat(sq.Dollar).
+											ToSql()
 
 	if err != nil {
-		repo.logger.Error("failed end auction and award the winner: " + err.Error())
 		return entities.Auction{}, err
 	}
 
-	//find lot id
-	var lotID int64
 	err = tx.
-		QueryRow(ctx, findLotId, args).
+	QueryRow(ctx, sql, args...).
+	Scan(&auction.Id, &auction.LotId, &auction.Status, &auction.WinnerId)
+
+	return auction, err
+}
+
+// findLotId = `select l.id from auctions a join lots l on a.lot_id = l.id where a.id = @auction_id and a.status = @status`
+
+func findLotID(ctx context.Context,tx pgx.Tx, in *pb.CloseAuctionRequest) (int64, error){
+	var lotID int64
+
+	sql, args, err := sq.Select("l.id").
+											From("auctions a").
+											Join("lots l on a.lot_id = l.id").
+											Where(sq.Eq{"a.id": in.AuctionId}).
+											PlaceholderFormat(sq.Dollar).
+											ToSql()
+
+	if err != nil {
+		return 0, err
+	}
+	err = tx.
+		QueryRow(ctx, sql, args...).
 		Scan(&lotID)
 
-	if err != nil {
-		repo.logger.Error(
-			"Error",
-			slog.Any("cant find lot id", err),
-		)
-	}
+	return lotID, err
+}
 
-	//close lot
-	_, err = tx.Exec(ctx, closedLotQuery, lotID)
+//closedLotQuery = `update lots set status = 'Closed' where id = $1`
 
-	if err != nil {
-		repo.logger.Error(
-			"Error",
-			slog.Any("cant close lot", err),
-		)
-	}
-
-	//bids without winner
-	bidsWithoutWinner := append(auction.Bids[:winnerIndx], auction.Bids[winnerIndx+1:]...)
-
-	//return money money money
-	for _, v := range bidsWithoutWinner {
-		returnMoneyArgs := pgx.NamedArgs{
-			"bidder_id": v.BidderId,
-			"amount":    v.Amount,
-		}
-
-		user := entities.User{}
-		err = tx.
-			QueryRow(ctx, returnMoney, returnMoneyArgs).
-			Scan(&user.Id, &user.Name, &user.Balance)
-
-		repo.logger.Info(
-			"Return money to users",
-			slog.Any("userID", user.Id),
-			slog.Any("old balance", user.Balance-v.Amount),
-			slog.Any("new balance", user.Balance),
-		)
-	}
+func closeLot(ctx context.Context,tx pgx.Tx, in *pb.CloseAuctionRequest, lotID int64) error{
+	sql, _, err := sq.Select("l.id").
+											From("auctions a").
+											Join("lots l on a.lot_id = l.id").
+											Where(sq.Eq{"a.id": in.AuctionId, "a.status": closedLotStatus}).
+											PlaceholderFormat(sq.Dollar).
+											ToSql()
 
 	if err != nil {
-		return entities.Auction{}, err
+		return err
 	}
+	_, err = tx.Exec(ctx, sql, lotID)
 
-	tx.Commit(ctx)
 
-	repo.logger.Info(
-		"Success close auction in storage",
-		slog.Any("auctionID", auction.Id),
-	)
+	return err
+}
 
-	return auction, nil
+// returnMoney = `update users set balance = balance + @amount where id = @bidder_id returning *`
+
+func returnMoney(ctx context.Context,tx pgx.Tx, bid entities.Bid) (entities.User, error){
+	user := entities.User{}
+
+	sql, args, err := sq.Update("users").
+											Set("balance", sq.Expr("balance + ?", bid.Amount)).
+											Where(sq.Eq{"id": bid.BidderId}).
+											Suffix("returning *").
+											PlaceholderFormat(sq.Dollar).
+											ToSql()
+
+	if err != nil {
+		return entities.User{}, err
+	}
+	err = tx.
+		QueryRow(ctx, sql, args...).
+		Scan(&user.Id, &user.Name, &user.Balance)
+
+
+	return user, err
+}
+
+// writeTransactionEndedAuctionQuery = `insert into transactions (sender_id, sender_type, recipient_id, recipient_type, amount, transaction_type) values (@auction_id, 'Auction', @bidder_id, 'User', @amount, 'Refund')`
+
+func closeAuctionWriteTransaction(ctx context.Context,tx pgx.Tx, in *pb.CloseAuctionRequest, bid entities.Bid) error{
+	sql, args, err := sq.Insert("transactions").
+											Columns("sender_id", "sender_type", "recipient_id", "recipient_type", "amount", "transaction_type").
+											Values(in.AuctionId, "Auction", bid.BidderId, "User", bid.Amount, "Refund").
+											PlaceholderFormat(sq.Dollar).
+											ToSql()
+
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, sql, args...)
+
+	return err
 }
