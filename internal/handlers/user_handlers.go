@@ -24,7 +24,9 @@ func (s *UserHandlers) GetUser(ctx context.Context, in *pb.GetUserRequest) (*pb.
 
 	if err != nil {
 		s.logger.Error("failed get user: " + err.Error())
-		return &pb.UserResponse{}, status.Errorf(codes.Unknown, "failed get user: %v\n", err)
+		return &pb.UserResponse{
+			User: &user,
+		}, status.Errorf(codes.Unknown, "failed get user: %v", err)
 	}
 
 	return &pb.UserResponse{User: &user}, nil

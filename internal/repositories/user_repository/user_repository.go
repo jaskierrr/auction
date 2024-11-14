@@ -1,4 +1,4 @@
-//go:generate mockgen -source=./user_repository.go -destination=../../../../test/mock/user_repo_mock.go -package=mock
+//go:generate mockgen -source=./user_repository.go -destination=../../../test/mock/user_repo_mock.go -package=mock
 
 package repositories
 
