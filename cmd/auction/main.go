@@ -8,6 +8,6 @@ import (
 func main() {
 	err := bootstrapper.New().RunAPI()
 	if err != nil {
-		log.Fatal("failed to start")
+		log.Fatalf("failed to start: %v", err)
 	}
 }

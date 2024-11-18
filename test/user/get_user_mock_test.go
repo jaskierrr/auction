@@ -12,12 +12,15 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/golang/mock/gomock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func Test_Get_User(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		userRepo *mock.MockUserRepo
 	}
@@ -26,6 +29,7 @@ func Test_Get_User(t *testing.T) {
 	defer ctrl.Finish()
 
 	logger := logger.NewLogger()
+	validator := validator.New(validator.WithRequiredStructEnabled())
 
 	userRepoMock := mock.NewMockUserRepo(ctrl)
 
@@ -34,7 +38,7 @@ func Test_Get_User(t *testing.T) {
 	}
 
 	service := service.NewUserService(userRepoMock)
-	usecase := handlers.NewUserHandlers(service, logger)
+	handlers := handlers.NewUserHandlers(service, logger, validator)
 
 	user := &pb.User{
 		Id:      1,
@@ -97,7 +101,7 @@ func Test_Get_User(t *testing.T) {
 				tt.prepare(testFields)
 			}
 
-			response, err := usecase.GetUser(ctx, tt.args)
+			response, err := handlers.GetUser(ctx, tt.args)
 
 
 			if !reflect.DeepEqual(response, tt.wantResUser) {

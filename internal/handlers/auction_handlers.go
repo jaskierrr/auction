@@ -13,7 +13,7 @@ func (s *AuctionHandlers) CreateLot(ctx context.Context, in *pb.CreateLotRequest
 
 	if err != nil {
 		s.logger.Error("failed create lot: " + err.Error())
-		return &pb.LotResponse{}, status.Errorf(codes.Unknown, "failed create lot: %v\n", err)
+		return &pb.LotResponse{}, status.Errorf(codes.Unknown, "failed create lot: %v", err)
 	}
 
 	return &pb.LotResponse{Lot: &lot}, nil
@@ -24,7 +24,9 @@ func (s *AuctionHandlers) GetLot(ctx context.Context, in *pb.GetLotRequest) (*pb
 
 	if err != nil {
 		s.logger.Error("failed get lot: " + err.Error())
-		return &pb.LotResponse{}, status.Errorf(codes.Unknown, "failed get lot: %v\n", err)
+		return &pb.LotResponse{
+			Lot: &lot,
+		}, status.Errorf(codes.Unknown, "failed get lot: %v", err)
 	}
 
 	return &pb.LotResponse{Lot: &lot}, nil
@@ -35,7 +37,7 @@ func (s *AuctionHandlers) CreateAuction(ctx context.Context, in *pb.CreateAuctio
 
 	if err != nil {
 		s.logger.Error("failed create auction: " + err.Error())
-		return &pb.AuctionResponse{}, status.Errorf(codes.Unknown, "failed create auction: %v\n", err)
+		return &pb.AuctionResponse{}, status.Errorf(codes.Unknown, "failed create auction: %v", err)
 	}
 
 	return &pb.AuctionResponse{Auction: &auction}, nil
@@ -46,7 +48,7 @@ func (s *AuctionHandlers) CloseAuction(ctx context.Context, in *pb.CloseAuctionR
 
 	if err != nil {
 		s.logger.Error("failed close auction: " + err.Error())
-		return &pb.AuctionResponse{}, status.Errorf(codes.Unknown, "failed close auction: %v\n", err)
+		return &pb.AuctionResponse{}, status.Errorf(codes.Unknown, "failed close auction: %v", err)
 	}
 
 	return &pb.AuctionResponse{Auction: &auction}, nil
@@ -57,7 +59,9 @@ func (s *AuctionHandlers) PlaceBid(ctx context.Context, in *pb.PlaceBidRequest) 
 
 	if err != nil {
 		s.logger.Error("failed place bid: " + err.Error())
-		return &pb.BidResponse{}, status.Errorf(codes.Unknown, "failed place bid: %v\n", err)
+		return &pb.BidResponse{
+			Bid: &bid,
+		}, status.Errorf(codes.Unknown, "failed place bid: %v", err)
 	}
 
 	return &pb.BidResponse{Bid: &bid}, nil
@@ -68,7 +72,9 @@ func (s *AuctionHandlers) GetBid(ctx context.Context, in *pb.GetBidRequest) (*pb
 
 	if err != nil {
 		s.logger.Error("failed get bid: " + err.Error())
-		return &pb.BidResponse{}, status.Errorf(codes.Unknown, "failed get bid: %v\n", err)
+		return &pb.BidResponse{
+			Bid: &bid,
+		}, status.Errorf(codes.Unknown, "failed get bid: %v", err)
 	}
 
 	return &pb.BidResponse{Bid: &bid}, nil
