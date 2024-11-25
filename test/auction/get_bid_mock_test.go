@@ -5,7 +5,7 @@ import (
 	"errors"
 	"main/internal/entities"
 	"main/internal/handlers"
-	service "main/internal/services"
+	auction_service "main/internal/services/auction"
 	pb "main/pkg/grpc"
 	"main/pkg/logger"
 	"main/test/mock"
@@ -39,17 +39,17 @@ func Test_Get_Bid(t *testing.T) {
 		auctionRepo: auctionRepoMock,
 	}
 
-	service := service.NewAuctionService(auctionRepoMock)
+	service := auction_service.NewAuctionService(auctionRepoMock, logger)
 	handlers := handlers.NewAuctionHandlers(service, logger, validator)
 
 	time := time.Now()
 	timePB := timestamppb.New(time)
 
 	bid := &pb.Bid{
-		Id: 1,
+		Id:        1,
 		AuctionId: 1,
-		BidderId: 1,
-		Amount: 100,
+		BidderId:  1,
+		Amount:    100,
 		CreatedAt: timePB,
 	}
 
@@ -62,10 +62,10 @@ func Test_Get_Bid(t *testing.T) {
 	}
 
 	lotRepoResponse := entities.Bid{
-		Id: 1,
+		Id:        1,
 		AuctionId: 1,
-		BidderId: 1,
-		Amount: 100,
+		BidderId:  1,
+		Amount:    100,
 		CreatedAt: time,
 	}
 
@@ -74,11 +74,11 @@ func Test_Get_Bid(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name        string
-		args        *pb.GetBidRequest
-		prepare     func(f *fields)
+		name       string
+		args       *pb.GetBidRequest
+		prepare    func(f *fields)
 		wantResLot *pb.BidResponse
-		wantResErr  error
+		wantResErr error
 	}{
 		{
 			name: "valid",
@@ -89,7 +89,7 @@ func Test_Get_Bid(t *testing.T) {
 				)
 			},
 			wantResLot: &pb.BidResponse{Bid: bid},
-			wantResErr:  nil,
+			wantResErr: nil,
 		},
 		{
 			name: "wrong_ID",
@@ -100,7 +100,7 @@ func Test_Get_Bid(t *testing.T) {
 				)
 			},
 			wantResLot: lotErr,
-			wantResErr:  errErr,
+			wantResErr: errErr,
 		},
 	}
 
@@ -111,7 +111,6 @@ func Test_Get_Bid(t *testing.T) {
 			}
 
 			response, err := handlers.GetBid(ctx, tt.args)
-
 
 			if !reflect.DeepEqual(response, tt.wantResLot) {
 				t.Errorf("\nGetBid() = %v\nwant = %v", response, tt.wantResLot)

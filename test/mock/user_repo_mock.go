@@ -11,6 +11,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	pgx "github.com/jackc/pgx/v5"
 )
 
 // MockUserRepo is a mock of UserRepo interface.
@@ -51,21 +52,6 @@ func (mr *MockUserRepoMockRecorder) CreateUser(ctx, in interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUserRepo)(nil).CreateUser), ctx, in)
 }
 
-// DepositBalance mocks base method.
-func (m *MockUserRepo) DepositBalance(ctx context.Context, in *grpc.DepositBalanceRequest) (*grpc.BalanceResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DepositBalance", ctx, in)
-	ret0, _ := ret[0].(*grpc.BalanceResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// DepositBalance indicates an expected call of DepositBalance.
-func (mr *MockUserRepoMockRecorder) DepositBalance(ctx, in interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DepositBalance", reflect.TypeOf((*MockUserRepo)(nil).DepositBalance), ctx, in)
-}
-
 // GetUser mocks base method.
 func (m *MockUserRepo) GetUser(ctx context.Context, in *grpc.GetUserRequest) (entities.User, error) {
 	m.ctrl.T.Helper()
@@ -79,4 +65,48 @@ func (m *MockUserRepo) GetUser(ctx context.Context, in *grpc.GetUserRequest) (en
 func (mr *MockUserRepoMockRecorder) GetUser(ctx, in interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockUserRepo)(nil).GetUser), ctx, in)
+}
+
+// PlaceBidWriteTransaction mocks base method.
+func (m *MockUserRepo) PlaceBidWriteTransaction(ctx context.Context, tx pgx.Tx, in *grpc.DepositBalanceRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PlaceBidWriteTransaction", ctx, tx, in)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PlaceBidWriteTransaction indicates an expected call of PlaceBidWriteTransaction.
+func (mr *MockUserRepoMockRecorder) PlaceBidWriteTransaction(ctx, tx, in interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PlaceBidWriteTransaction", reflect.TypeOf((*MockUserRepo)(nil).PlaceBidWriteTransaction), ctx, tx, in)
+}
+
+// StartTx mocks base method.
+func (m *MockUserRepo) StartTx(ctx context.Context) (pgx.Tx, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StartTx", ctx)
+	ret0, _ := ret[0].(pgx.Tx)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StartTx indicates an expected call of StartTx.
+func (mr *MockUserRepoMockRecorder) StartTx(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartTx", reflect.TypeOf((*MockUserRepo)(nil).StartTx), ctx)
+}
+
+// UpdateBalance mocks base method.
+func (m *MockUserRepo) UpdateBalance(ctx context.Context, tx pgx.Tx, in *grpc.DepositBalanceRequest) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateBalance", ctx, tx, in)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateBalance indicates an expected call of UpdateBalance.
+func (mr *MockUserRepoMockRecorder) UpdateBalance(ctx, tx, in interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBalance", reflect.TypeOf((*MockUserRepo)(nil).UpdateBalance), ctx, tx, in)
 }

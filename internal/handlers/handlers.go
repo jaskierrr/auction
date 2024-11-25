@@ -2,7 +2,8 @@ package handlers
 
 import (
 	"log/slog"
-	service "main/internal/services"
+	user_service "main/internal/services/user"
+	auction_service "main/internal/services/auction"
 	pb "main/pkg/grpc"
 
 	"github.com/go-playground/validator/v10"
@@ -11,30 +12,30 @@ import (
 
 type UserHandlers struct {
 	pb.UnimplementedUserServiceServer
-	logger  *slog.Logger
+	logger    *slog.Logger
 	validator *validator.Validate
-	service service.UserService
+	service   user_service.UserService
 }
 
 type AuctionHandlers struct {
 	pb.UnimplementedAuctionServiceServer
-	logger  *slog.Logger
+	logger    *slog.Logger
 	validator *validator.Validate
-	service service.AuctionService
+	service   auction_service.AuctionService
 }
 
-func NewUserHandlers(service service.UserService, logger *slog.Logger, validator *validator.Validate) UserHandlers {
+func NewUserHandlers(service user_service.UserService, logger *slog.Logger, validator *validator.Validate) UserHandlers {
 	return UserHandlers{
-		logger:  logger,
-		validator:  validator,
-		service: service,
+		logger:    logger,
+		validator: validator,
+		service:   service,
 	}
 }
-func NewAuctionHandlers(service service.AuctionService, logger *slog.Logger, validator *validator.Validate) AuctionHandlers {
+func NewAuctionHandlers(service auction_service.AuctionService, logger *slog.Logger, validator *validator.Validate) AuctionHandlers {
 	return AuctionHandlers{
-		logger:  logger,
-		validator:  validator,
-		service: service,
+		logger:    logger,
+		validator: validator,
+		service:   service,
 	}
 }
 

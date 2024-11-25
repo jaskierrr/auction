@@ -11,6 +11,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	pgx "github.com/jackc/pgx/v5"
 )
 
 // MockAuctionRepo is a mock of AuctionRepo interface.
@@ -36,19 +37,62 @@ func (m *MockAuctionRepo) EXPECT() *MockAuctionRepoMockRecorder {
 	return m.recorder
 }
 
-// CloseAuction mocks base method.
-func (m *MockAuctionRepo) CloseAuction(ctx context.Context, in *grpc.CloseAuctionRequest) (entities.Auction, error) {
+// AwardingWinner mocks base method.
+func (m *MockAuctionRepo) AwardingWinner(ctx context.Context, tx pgx.Tx, in *grpc.CloseAuctionRequest, auction entities.Auction, winnerBid entities.Bid) (entities.Auction, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CloseAuction", ctx, in)
+	ret := m.ctrl.Call(m, "AwardingWinner", ctx, tx, in, auction, winnerBid)
 	ret0, _ := ret[0].(entities.Auction)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CloseAuction indicates an expected call of CloseAuction.
-func (mr *MockAuctionRepoMockRecorder) CloseAuction(ctx, in interface{}) *gomock.Call {
+// AwardingWinner indicates an expected call of AwardingWinner.
+func (mr *MockAuctionRepoMockRecorder) AwardingWinner(ctx, tx, in, auction, winnerBid interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloseAuction", reflect.TypeOf((*MockAuctionRepo)(nil).CloseAuction), ctx, in)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AwardingWinner", reflect.TypeOf((*MockAuctionRepo)(nil).AwardingWinner), ctx, tx, in, auction, winnerBid)
+}
+
+// CheckAuctionStatus mocks base method.
+func (m *MockAuctionRepo) CheckAuctionStatus(ctx context.Context, tx pgx.Tx, in *grpc.PlaceBidRequest) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckAuctionStatus", ctx, tx, in)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckAuctionStatus indicates an expected call of CheckAuctionStatus.
+func (mr *MockAuctionRepoMockRecorder) CheckAuctionStatus(ctx, tx, in interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckAuctionStatus", reflect.TypeOf((*MockAuctionRepo)(nil).CheckAuctionStatus), ctx, tx, in)
+}
+
+// CloseAuctionWriteTransaction mocks base method.
+func (m *MockAuctionRepo) CloseAuctionWriteTransaction(ctx context.Context, tx pgx.Tx, in *grpc.CloseAuctionRequest, bid entities.Bid) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CloseAuctionWriteTransaction", ctx, tx, in, bid)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CloseAuctionWriteTransaction indicates an expected call of CloseAuctionWriteTransaction.
+func (mr *MockAuctionRepoMockRecorder) CloseAuctionWriteTransaction(ctx, tx, in, bid interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloseAuctionWriteTransaction", reflect.TypeOf((*MockAuctionRepo)(nil).CloseAuctionWriteTransaction), ctx, tx, in, bid)
+}
+
+// CloseLot mocks base method.
+func (m *MockAuctionRepo) CloseLot(ctx context.Context, tx pgx.Tx, in *grpc.CloseAuctionRequest, lotID int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CloseLot", ctx, tx, in, lotID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CloseLot indicates an expected call of CloseLot.
+func (mr *MockAuctionRepoMockRecorder) CloseLot(ctx, tx, in, lotID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloseLot", reflect.TypeOf((*MockAuctionRepo)(nil).CloseLot), ctx, tx, in, lotID)
 }
 
 // CreateAuction mocks base method.
@@ -81,6 +125,81 @@ func (mr *MockAuctionRepoMockRecorder) CreateLot(ctx, in interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateLot", reflect.TypeOf((*MockAuctionRepo)(nil).CreateLot), ctx, in)
 }
 
+// EditUserBalance mocks base method.
+func (m *MockAuctionRepo) EditUserBalance(ctx context.Context, tx pgx.Tx, in *grpc.PlaceBidRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EditUserBalance", ctx, tx, in)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EditUserBalance indicates an expected call of EditUserBalance.
+func (mr *MockAuctionRepoMockRecorder) EditUserBalance(ctx, tx, in interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditUserBalance", reflect.TypeOf((*MockAuctionRepo)(nil).EditUserBalance), ctx, tx, in)
+}
+
+// EndAuction mocks base method.
+func (m *MockAuctionRepo) EndAuction(ctx context.Context, tx pgx.Tx, in *grpc.CloseAuctionRequest, auction entities.Auction) (entities.Auction, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EndAuction", ctx, tx, in, auction)
+	ret0, _ := ret[0].(entities.Auction)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EndAuction indicates an expected call of EndAuction.
+func (mr *MockAuctionRepoMockRecorder) EndAuction(ctx, tx, in, auction interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndAuction", reflect.TypeOf((*MockAuctionRepo)(nil).EndAuction), ctx, tx, in, auction)
+}
+
+// FindAllBids mocks base method.
+func (m *MockAuctionRepo) FindAllBids(ctx context.Context, tx pgx.Tx, in *grpc.CloseAuctionRequest) (entities.Auction, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindAllBids", ctx, tx, in)
+	ret0, _ := ret[0].(entities.Auction)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindAllBids indicates an expected call of FindAllBids.
+func (mr *MockAuctionRepoMockRecorder) FindAllBids(ctx, tx, in interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllBids", reflect.TypeOf((*MockAuctionRepo)(nil).FindAllBids), ctx, tx, in)
+}
+
+// FindLotID mocks base method.
+func (m *MockAuctionRepo) FindLotID(ctx context.Context, tx pgx.Tx, in *grpc.CloseAuctionRequest) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindLotID", ctx, tx, in)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindLotID indicates an expected call of FindLotID.
+func (mr *MockAuctionRepoMockRecorder) FindLotID(ctx, tx, in interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLotID", reflect.TypeOf((*MockAuctionRepo)(nil).FindLotID), ctx, tx, in)
+}
+
+// FindStartingBid mocks base method.
+func (m *MockAuctionRepo) FindStartingBid(ctx context.Context, tx pgx.Tx, in *grpc.PlaceBidRequest) (float64, int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindStartingBid", ctx, tx, in)
+	ret0, _ := ret[0].(float64)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// FindStartingBid indicates an expected call of FindStartingBid.
+func (mr *MockAuctionRepoMockRecorder) FindStartingBid(ctx, tx, in interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindStartingBid", reflect.TypeOf((*MockAuctionRepo)(nil).FindStartingBid), ctx, tx, in)
+}
+
 // GetBid mocks base method.
 func (m *MockAuctionRepo) GetBid(ctx context.Context, in *grpc.GetBidRequest) (entities.Bid, error) {
 	m.ctrl.T.Helper()
@@ -111,17 +230,62 @@ func (mr *MockAuctionRepoMockRecorder) GetLot(ctx, in interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLot", reflect.TypeOf((*MockAuctionRepo)(nil).GetLot), ctx, in)
 }
 
-// PlaceBid mocks base method.
-func (m *MockAuctionRepo) PlaceBid(ctx context.Context, in *grpc.PlaceBidRequest) (entities.Bid, error) {
+// InsertBid mocks base method.
+func (m *MockAuctionRepo) InsertBid(ctx context.Context, tx pgx.Tx, in *grpc.PlaceBidRequest) (entities.Bid, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PlaceBid", ctx, in)
+	ret := m.ctrl.Call(m, "InsertBid", ctx, tx, in)
 	ret0, _ := ret[0].(entities.Bid)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// InsertBid indicates an expected call of InsertBid.
+func (mr *MockAuctionRepoMockRecorder) InsertBid(ctx, tx, in interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertBid", reflect.TypeOf((*MockAuctionRepo)(nil).InsertBid), ctx, tx, in)
+}
+
+// PlaceBidWriteTransaction mocks base method.
+func (m *MockAuctionRepo) PlaceBidWriteTransaction(ctx context.Context, tx pgx.Tx, in *grpc.PlaceBidRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PlaceBidWriteTransaction", ctx, tx, in)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PlaceBidWriteTransaction indicates an expected call of PlaceBidWriteTransaction.
+func (mr *MockAuctionRepoMockRecorder) PlaceBidWriteTransaction(ctx, tx, in interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PlaceBidWriteTransaction", reflect.TypeOf((*MockAuctionRepo)(nil).PlaceBidWriteTransaction), ctx, tx, in)
+}
+
+// ReturnMoney mocks base method.
+func (m *MockAuctionRepo) ReturnMoney(ctx context.Context, tx pgx.Tx, bid entities.Bid) (entities.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReturnMoney", ctx, tx, bid)
+	ret0, _ := ret[0].(entities.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// PlaceBid indicates an expected call of PlaceBid.
-func (mr *MockAuctionRepoMockRecorder) PlaceBid(ctx, in interface{}) *gomock.Call {
+// ReturnMoney indicates an expected call of ReturnMoney.
+func (mr *MockAuctionRepoMockRecorder) ReturnMoney(ctx, tx, bid interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PlaceBid", reflect.TypeOf((*MockAuctionRepo)(nil).PlaceBid), ctx, in)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReturnMoney", reflect.TypeOf((*MockAuctionRepo)(nil).ReturnMoney), ctx, tx, bid)
+}
+
+// StartTx mocks base method.
+func (m *MockAuctionRepo) StartTx(ctx context.Context) (pgx.Tx, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StartTx", ctx)
+	ret0, _ := ret[0].(pgx.Tx)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StartTx indicates an expected call of StartTx.
+func (mr *MockAuctionRepoMockRecorder) StartTx(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartTx", reflect.TypeOf((*MockAuctionRepo)(nil).StartTx), ctx)
 }

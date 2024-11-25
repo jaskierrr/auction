@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"errors"
+	"log/slog"
 	pb "main/pkg/grpc"
 
 	"google.golang.org/grpc/codes"
@@ -10,14 +10,6 @@ import (
 )
 
 func (s *UserHandlers) CreateUser(ctx context.Context, in *pb.CreateUserRequest) (*pb.UserResponse, error) {
-	if in.Name == "" {
-		err := errors.New("name user is empty")
-		s.logger.Error("failed create user: " + err.Error())
-		return &pb.UserResponse{
-			User: &pb.User{},
-		}, status.Errorf(codes.Unknown, "failed create user: %v", err)
-	}
-
 	user, err := s.service.CreateUser(ctx, in)
 
 	if err != nil {
@@ -50,6 +42,11 @@ func (s *UserHandlers) DepositBalance(ctx context.Context, in *pb.DepositBalance
 		s.logger.Error("failed deposite balance: " + err.Error())
 		return &pb.BalanceResponse{}, status.Errorf(codes.Unknown, "failed deposite balance: %v", err)
 	}
+
+	s.logger.Info(
+		"Success deposite balance",
+		slog.Any("userID", in.UserId),
+	)
 
 	return balance, nil
 }

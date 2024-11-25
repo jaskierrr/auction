@@ -5,7 +5,7 @@ import (
 	"errors"
 	"main/internal/entities"
 	"main/internal/handlers"
-	service "main/internal/services"
+	user_service "main/internal/services/user"
 	pb "main/pkg/grpc"
 	"main/pkg/logger"
 	"main/test/mock"
@@ -37,7 +37,7 @@ func Test_Get_User(t *testing.T) {
 		userRepo: userRepoMock,
 	}
 
-	service := service.NewUserService(userRepoMock)
+	service := user_service.NewUserService(userRepoMock, logger)
 	handlers := handlers.NewUserHandlers(service, logger, validator)
 
 	user := &pb.User{
@@ -102,7 +102,6 @@ func Test_Get_User(t *testing.T) {
 			}
 
 			response, err := handlers.GetUser(ctx, tt.args)
-
 
 			if !reflect.DeepEqual(response, tt.wantResUser) {
 				t.Errorf("\nGetUser() = %v\nwant = %v", response, tt.wantResUser)

@@ -7,9 +7,10 @@ import (
 	"main/config"
 	"main/internal/handlers"
 	"main/internal/infrastructure/database"
-	auctionRepo "main/internal/repositories/auction_repository"
-	userRepo "main/internal/repositories/user_repository"
-	service "main/internal/services"
+	auctionRepo "main/internal/repositories/auction"
+	userRepo "main/internal/repositories/user"
+	auction_service "main/internal/services/auction"
+	user_service "main/internal/services/user"
 	pb "main/pkg/grpc"
 	"main/pkg/logger"
 	"net"
@@ -29,13 +30,13 @@ type bootstrapper struct {
 
 	user struct {
 		repo     userRepo.UserRepo
-		service  service.UserService
+		service  user_service.UserService
 		handlers handlers.UserHandlers
 	}
 
 	auction struct {
 		repo     auctionRepo.AuctionRepo
-		service  service.AuctionService
+		service  auction_service.AuctionService
 		handlers handlers.AuctionHandlers
 	}
 }
@@ -72,11 +73,11 @@ func (b *bootstrapper) registerAPIServer(cfg config.Config) error {
 	b.validator = validator.New(validator.WithRequiredStructEnabled())
 
 	b.user.repo = userRepo.NewUserRepo(b.db, b.logger)
-	b.user.service = service.NewUserService(b.user.repo)
+	b.user.service = user_service.NewUserService(b.user.repo, b.logger)
 	b.user.handlers = handlers.NewUserHandlers(b.user.service, b.logger, b.validator)
 
 	b.auction.repo = auctionRepo.NewAuctionRepo(b.db, b.logger)
-	b.auction.service = service.NewAuctionService(b.auction.repo)
+	b.auction.service = auction_service.NewAuctionService(b.auction.repo, b.logger)
 	b.auction.handlers = handlers.NewAuctionHandlers(b.auction.service, b.logger, b.validator)
 
 	//** start gRPC-Gateway
@@ -89,7 +90,6 @@ func (b *bootstrapper) registerAPIServer(cfg config.Config) error {
 		)
 		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 		err = pb.RegisterAuctionServiceHandlerFromEndpoint(ctx, mux, cfg.ServerPort, opts)
-
 
 		log.Println("HTTP gateway listening on :8081")
 		err = http.ListenAndServe(":8081", mux)

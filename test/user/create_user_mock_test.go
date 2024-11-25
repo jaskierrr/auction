@@ -5,7 +5,7 @@ import (
 	"errors"
 	"main/internal/entities"
 	"main/internal/handlers"
-	service "main/internal/services"
+	user_service "main/internal/services/user"
 	pb "main/pkg/grpc"
 	"main/pkg/logger"
 	"main/test/mock"
@@ -20,7 +20,7 @@ import (
 
 func Test_Create_User(t *testing.T) {
 	t.Parallel()
-	
+
 	type fields struct {
 		userRepo *mock.MockUserRepo
 	}
@@ -37,7 +37,7 @@ func Test_Create_User(t *testing.T) {
 		userRepo: userRepoMock,
 	}
 
-	service := service.NewUserService(userRepoMock)
+	service := user_service.NewUserService(userRepoMock, logger)
 	handlers := handlers.NewUserHandlers(service, logger, validator)
 
 	user := &pb.User{
@@ -46,7 +46,7 @@ func Test_Create_User(t *testing.T) {
 		Balance: 1000,
 	}
 
-	validUserReq:= &pb.CreateUserRequest{
+	validUserReq := &pb.CreateUserRequest{
 		Name: "Ivan",
 	}
 
@@ -86,9 +86,9 @@ func Test_Create_User(t *testing.T) {
 			name: "wrong_ID",
 			args: emtyUserReq,
 			// prepare: func(f *fields) {
-				// gomock.InOrder(
-				// 	f.userRepo.EXPECT().CreateUser(ctx, reqArgErr).Return(entities.User{}, errors.New("no rows in result set")),
-				// )
+			// gomock.InOrder(
+			// 	f.userRepo.EXPECT().CreateUser(ctx, reqArgErr).Return(entities.User{}, errors.New("no rows in result set")),
+			// )
 			// },
 			wantResUser: userErr,
 			wantResErr:  errErr,

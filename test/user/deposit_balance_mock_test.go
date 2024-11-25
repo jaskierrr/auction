@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"main/internal/handlers"
-	service "main/internal/services"
+	user_service "main/internal/services/user"
 	pb "main/pkg/grpc"
 	"main/pkg/logger"
 	"main/test/mock"
@@ -19,6 +19,8 @@ import (
 
 func Test_Deposit_Balance(t *testing.T) {
 	t.Parallel()
+
+	ctx := context.Background()
 
 	type fields struct {
 		userRepo *mock.MockUserRepo
@@ -36,8 +38,10 @@ func Test_Deposit_Balance(t *testing.T) {
 		userRepo: userRepoMock,
 	}
 
-	service := service.NewUserService(userRepoMock)
+	service := user_service.NewUserService(userRepoMock, logger)
 	handlers := handlers.NewUserHandlers(service, logger, validator)
+
+	var tx, _ = userRepoMock.StartTx(ctx)
 
 	validUserReq := &pb.DepositBalanceRequest{
 		UserId: 1,
@@ -63,47 +67,47 @@ func Test_Deposit_Balance(t *testing.T) {
 	amountErr := status.Errorf(codes.Unknown, "failed deposite balance: %v", errors.Join(errors.New("cant write transaction"), err))
 	userIDerr := status.Errorf(codes.Unknown, "failed deposite balance: %v", errors.New("no rows in result set"))
 
-	ctx := context.Background()
-
 	tests := []struct {
-		name        string
-		args        *pb.DepositBalanceRequest
-		prepare     func(f *fields)
+		name           string
+		args           *pb.DepositBalanceRequest
+		prepare        func(f *fields)
 		wantResBalance *pb.BalanceResponse
-		wantResErr  error
+		wantResErr     error
 	}{
 		{
 			name: "valid",
 			args: validUserReq,
 			prepare: func(f *fields) {
 				gomock.InOrder(
-					f.userRepo.EXPECT().DepositBalance(ctx, validUserReq).Return(balanceResponse, nil),
+					f.userRepo.EXPECT().StartTx(ctx).Return(tx, nil),
+					f.userRepo.EXPECT().UpdateBalance(ctx, tx, validUserReq).Return("100", nil),
+					f.userRepo.EXPECT().PlaceBidWriteTransaction(ctx, tx, validUserReq).Return(nil),
 				)
 			},
 			wantResBalance: balanceResponse,
-			wantResErr:  nil,
+			wantResErr:     nil,
 		},
 		{
 			name: "wrong_ID",
 			args: emtyUserReq,
 			prepare: func(f *fields) {
 				gomock.InOrder(
-					f.userRepo.EXPECT().DepositBalance(ctx, emtyUserReq).Return(&pb.BalanceResponse{}, errors.New("no rows in result set")),
+					f.userRepo.EXPECT().UpdateBalance(ctx, tx, emtyUserReq).Return(&pb.BalanceResponse{}, errors.New("no rows in result set")),
 				)
 			},
 			wantResBalance: balanceErr,
-			wantResErr:  userIDerr,
+			wantResErr:     userIDerr,
 		},
 		{
 			name: "wrong_amount",
 			args: emtyAmountReq,
 			prepare: func(f *fields) {
 				gomock.InOrder(
-					f.userRepo.EXPECT().DepositBalance(ctx, emtyAmountReq).Return(&pb.BalanceResponse{}, errors.Join(errors.New("cant write transaction"), err)),
+					f.userRepo.EXPECT().UpdateBalance(ctx, tx, emtyAmountReq).Return(&pb.BalanceResponse{}, errors.Join(errors.New("cant write transaction"), err)),
 				)
 			},
 			wantResBalance: balanceErr,
-			wantResErr:  amountErr,
+			wantResErr:     amountErr,
 		},
 	}
 

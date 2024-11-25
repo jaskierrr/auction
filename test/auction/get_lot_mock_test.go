@@ -5,7 +5,7 @@ import (
 	"errors"
 	"main/internal/entities"
 	"main/internal/handlers"
-	service "main/internal/services"
+	auction_service "main/internal/services/auction"
 	pb "main/pkg/grpc"
 	"main/pkg/logger"
 	"main/test/mock"
@@ -37,16 +37,16 @@ func Test_Get_Lot(t *testing.T) {
 		auctionRepo: auctionRepoMock,
 	}
 
-	service := service.NewAuctionService(auctionRepoMock)
+	service := auction_service.NewAuctionService(auctionRepoMock, logger)
 	handlers := handlers.NewAuctionHandlers(service, logger, validator)
 
 	lot := &pb.Lot{
-		Id:      1,
-		Title: "Title",
+		Id:          1,
+		Title:       "Title",
 		Description: "Desc",
 		StartingBid: 100,
-		SellerId: 1,
-		Status: "Active",
+		SellerId:    1,
+		Status:      "Active",
 	}
 
 	reqArgDef := &pb.GetLotRequest{
@@ -58,12 +58,12 @@ func Test_Get_Lot(t *testing.T) {
 	}
 
 	lotRepoResponse := entities.Lot{
-		Id:      1,
-		Title: "Title",
+		Id:          1,
+		Title:       "Title",
 		Description: "Desc",
 		StartingBid: 100,
-		SellerId: 1,
-		Status: "Active",
+		SellerId:    1,
+		Status:      "Active",
 	}
 
 	lotErr, errErr := &pb.LotResponse{Lot: &pb.Lot{}}, status.Errorf(codes.Unknown, "failed get lot: %v", errors.New("no rows in result set"))
@@ -71,11 +71,11 @@ func Test_Get_Lot(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name        string
-		args        *pb.GetLotRequest
-		prepare     func(f *fields)
+		name       string
+		args       *pb.GetLotRequest
+		prepare    func(f *fields)
 		wantResLot *pb.LotResponse
-		wantResErr  error
+		wantResErr error
 	}{
 		{
 			name: "valid",
@@ -86,7 +86,7 @@ func Test_Get_Lot(t *testing.T) {
 				)
 			},
 			wantResLot: &pb.LotResponse{Lot: lot},
-			wantResErr:  nil,
+			wantResErr: nil,
 		},
 		{
 			name: "wrong_ID",
@@ -97,7 +97,7 @@ func Test_Get_Lot(t *testing.T) {
 				)
 			},
 			wantResLot: lotErr,
-			wantResErr:  errErr,
+			wantResErr: errErr,
 		},
 	}
 
@@ -108,7 +108,6 @@ func Test_Get_Lot(t *testing.T) {
 			}
 
 			response, err := handlers.GetLot(ctx, tt.args)
-
 
 			if !reflect.DeepEqual(response, tt.wantResLot) {
 				t.Errorf("\nGetLot() = %v\nwant = %v", response, tt.wantResLot)
