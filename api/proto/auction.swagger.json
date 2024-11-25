@@ -113,7 +113,7 @@
         ]
       }
     },
-    "/bid/{auctionId}": {
+    "/bid/{id}": {
       "get": {
         "operationId": "AuctionService_GetBid",
         "responses": {
@@ -132,7 +132,7 @@
         },
         "parameters": [
           {
-            "name": "auctionId",
+            "name": "id",
             "in": "path",
             "required": true,
             "type": "string",
@@ -141,6 +141,70 @@
         ],
         "tags": [
           "AuctionService"
+        ]
+      }
+    },
+    "/create/user": {
+      "post": {
+        "operationId": "UserService_CreateUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/auctionUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/auctionCreateUserRequest"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/deposit-balance": {
+      "patch": {
+        "operationId": "UserService_DepositBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/auctionBalanceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/auctionDepositBalanceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
         ]
       }
     },
@@ -204,68 +268,6 @@
         ],
         "tags": [
           "AuctionService"
-        ]
-      }
-    },
-    "/user": {
-      "post": {
-        "operationId": "UserService_CreateUser",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/auctionUserResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/auctionCreateUserRequest"
-            }
-          }
-        ],
-        "tags": [
-          "UserService"
-        ]
-      },
-      "patch": {
-        "operationId": "UserService_DepositBalance",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/auctionBalanceResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/auctionDepositBalanceRequest"
-            }
-          }
-        ],
-        "tags": [
-          "UserService"
         ]
       }
     },

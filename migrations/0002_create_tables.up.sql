@@ -1,8 +1,4 @@
-CREATE TABLE IF NOT EXISTS users (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    balance NUMERIC(15, 2) DEFAULT 0 CHECK (balance >= 0)
-);
+BEGIN;
 
 CREATE TABLE IF NOT EXISTS lots (
     id BIGSERIAL PRIMARY KEY,
@@ -32,3 +28,5 @@ CREATE TABLE IF NOT EXISTS bids (
 CREATE INDEX IF NOT EXISTS idx_lots_seller_id ON lots(seller_id);
 CREATE INDEX IF NOT EXISTS idx_bids_auction_id ON bids(auction_id);
 CREATE INDEX IF NOT EXISTS idx_auctions_status ON auctions(status);
+
+COMMIT;
